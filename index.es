@@ -5,44 +5,18 @@
 
 import React from 'react';
 import { ipcRenderer } from 'electron';
+import { store } from 'views/create-store';
 
-// 簡單的空組件，讓 POI 正常加載插件
-const ExportButton = () => (
+// POI 插件標準導出結構 — 必須有 reactClass 才能正常運作
+export const reactClass = () => (
     <div style={{ padding: '10px' }}>
         <button onClick={() => handleExport()}>導出到 kc-web</button>
     </div>
 );
 
 function notify(msg, type) {
-    // POI 沒有 popup，用 console + alert 代替
-    const prefix = `[poi-kc-web-export] ${type}:`;
-    if (type === 'error') console.error(prefix, msg);
-    else console.log(prefix, msg);
-}
-
-function handleExport() {
-    try {
-        const state = poi.store.getState();
-        const fleetData = state.fleet ?? state;
-
-        if (!fleetData?.fleets || !fleetData.fleets.length) {
-            notify('沒有找到艦隊數據，請先編排艦隊', 'warning');
-            return;
-        }
-
-        const deckData = convertToFleetFormat(fleetData, 0);
-
-        if (!deckData || deckData === '{}') {
-            notify('艦隊數據為空，請先編排艦隊', 'warning');
-            return;
-        }
-
-        openKcWeb(deckData);
-        notify('已開啟 kc-web，請在頁面中確認數據', 'success');
-    } catch (e) {
-        console.error('[poi-kc-web-export] error:', e);
-        notify(`導出失敗：${e.message}`, 'error');
-    }
+    if (type === 'error') console.error(`[poi-kc-web-export] ${msg}`);
+    else console.log(`[poi-kc-web-export] ${msg}`);
 }
 
 // kc-web deck builder 格式轉換
@@ -104,7 +78,7 @@ function openKcWeb(deckData) {
     } catch (e) {
         // fallback: open in default browser
         require('electron').shell.openExternal(url);
-        popup({ type: 'info', content: `已開啟瀏覽器，請手動導入數據` });
+        notify(`已開啟瀏覽器，請手動導入數據`, 'info');
         return;
     }
 
@@ -160,36 +134,38 @@ function openKcWeb(deckData) {
     return win;
 }
 
+function handleExport() {
+    try {
+        const state = store.getState();
+        const fleetData = state.fleet ?? state;
+
+        if (!fleetData?.fleets || !fleetData.fleets.length) {
+            notify('沒有找到艦隊數據，請先編排艦隊', 'warning');
+            return;
+        }
+
+        const deckData = convertToFleetFormat(fleetData, 0);
+
+        if (!deckData || deckData === '{}') {
+            notify('艦隊數據為空，請先編排艦隊', 'warning');
+            return;
+        }
+
+        openKcWeb(deckData);
+        notify('已開啟 kc-web，請在頁面中確認數據', 'success');
+    } catch (e) {
+        console.error('[poi-kc-web-export] error:', e);
+        notify(`導出失敗：${e.message}`, 'error');
+    }
+}
+
 // POI 插件標準導出結構
 export function pluginDidLoad(poi) {
     poi.registerMenu({
         title: 'kc-web Export',
         icon: 'fa/external-link',
         onClick() {
-            try {
-                // 獲取艦隊數據 — poi Redux store
-                const state = poi.store.getState();
-                const fleetData = state.fleet ?? state;
-
-                if (!fleetData?.fleets || !fleetData.fleets.length) {
-                    popup({ type: 'warning', content: '沒有找到艦隊數據，請先編排艦隊' });
-                    return;
-                }
-
-                // 轉換為 kc-web deck builder 格式 (第1艦隊)
-                const deckData = convertToFleetFormat(fleetData, 0);
-
-                if (!deckData || deckData === '{}') {
-                    popup({ type: 'warning', content: '艦隊數據為空，請先編排艦隊' });
-                    return;
-                }
-
-                openKcWeb(deckData);
-                popup({ type: 'success', content: '已開啟 kc-web，請在頁面中確認數據' });
-            } catch (e) {
-                console.error('[poi-kc-web-export] error:', e);
-                popup({ type: 'error', content: `導出失敗：${e.message}` });
-            }
+            handleExport();
         },
     });
 
@@ -203,6 +179,3 @@ export function pluginDidLoad(poi) {
         },
     });
 }
-
-// POI 插件標準導出結構 — 必須有 reactClass 才能正常運作
-export const reactClass = ExportButton;
