@@ -5,16 +5,7 @@
 
 import React from 'react';
 import { ipcRenderer } from 'electron';
-
-// 嘗試從不同來源獲取 store
-function getStore() {
-    // 方法1: window.poi.store
-    const poi = typeof window !== 'undefined' ? (window.__POI__ || window.poi) : null;
-    if (poi && poi.store && typeof poi.store.getState === 'function') return poi.store;
-    // 方法2: globalThis
-    if (globalThis.poiStore && typeof globalThis.poiStore.getState === 'function') return globalThis.poiStore;
-    return null;
-}
+import { store } from 'views/create-store';
 
 // POI 插件標準導出結構 — 必須有 reactClass 才能正常運作
 export const reactClass = () => {
@@ -22,12 +13,6 @@ export const reactClass = () => {
 
     const handleExport = async () => {
         try {
-            const store = getStore();
-            if (!store) {
-                setStatus('無法獲取 POI store');
-                return;
-            }
-
             const state = store.getState();
             const fleetData = state.fleet ?? state;
 
