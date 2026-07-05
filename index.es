@@ -5,7 +5,6 @@
 
 import React from 'react';
 import { ipcRenderer } from 'electron';
-import { popup } from 'poi/lib/ui/util/popup';
 
 // 簡單的空組件，讓 POI 正常加載插件
 const ExportButton = () => (
@@ -14,28 +13,35 @@ const ExportButton = () => (
     </div>
 );
 
+function notify(msg, type) {
+    // POI 沒有 popup，用 console + alert 代替
+    const prefix = `[poi-kc-web-export] ${type}:`;
+    if (type === 'error') console.error(prefix, msg);
+    else console.log(prefix, msg);
+}
+
 function handleExport() {
     try {
         const state = poi.store.getState();
         const fleetData = state.fleet ?? state;
 
         if (!fleetData?.fleets || !fleetData.fleets.length) {
-            popup({ type: 'warning', content: '沒有找到艦隊數據，請先編排艦隊' });
+            notify('沒有找到艦隊數據，請先編排艦隊', 'warning');
             return;
         }
 
         const deckData = convertToFleetFormat(fleetData, 0);
 
         if (!deckData || deckData === '{}') {
-            popup({ type: 'warning', content: '艦隊數據為空，請先編排艦隊' });
+            notify('艦隊數據為空，請先編排艦隊', 'warning');
             return;
         }
 
         openKcWeb(deckData);
-        popup({ type: 'success', content: '已開啟 kc-web，請在頁面中確認數據' });
+        notify('已開啟 kc-web，請在頁面中確認數據', 'success');
     } catch (e) {
         console.error('[poi-kc-web-export] error:', e);
-        popup({ type: 'error', content: `導出失敗：${e.message}` });
+        notify(`導出失敗：${e.message}`, 'error');
     }
 }
 
