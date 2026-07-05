@@ -1,0 +1,32 @@
+{
+  "name": "poi-plugin-kc-web-export",
+  "version": "0.1.0",
+  "description": "Export poi fleet data to kc-web (制空権シミュレータ)",
+  "main": "index.es",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/easonLiangWorldedtech/poi-kc-web-export.git"
+  },
+  "author": {
+    "name": "Eason Liang",
+    "link": "https://github.com/easonLiangWorldedtech"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/easonLiangWorldedtech/poi-kc-web-export/issues"
+  },
+  "homepage": "https://github.com/easonLiangWorldedtech/poi-kc-web-export#readme",
+  "devDependencies": {},
+  "poiPlugin": {
+    "title": "kc-web Export",
+    "description": "Export fleet data to kc-web (制空権シミュレータ)",
+    "icon": "fa/external-link",
+    "priority": 90,
+    "apiVer": {
+      "11.1.0": "0.1.0"
+    }
+  }
+}
