@@ -121,8 +121,8 @@ function openKcWeb(deckData) {
     return win;
 }
 
-// 主插件入口
-export default function main(poi) {
+// POI 插件標準導出結構
+export function pluginDidLoad(poi) {
     poi.registerMenu({
         title: 'kc-web Export',
         icon: 'fa/external-link',
@@ -160,7 +160,7 @@ export default function main(poi) {
         name: 'Export to kc-web',
         accelerator: 'CmdOrCtrl+Shift+E',
         onClick() {
-            main(poi);
+            pluginDidLoad(poi);
         },
     });
 }
