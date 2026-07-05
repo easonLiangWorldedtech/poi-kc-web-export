@@ -14,39 +14,40 @@ export const reactClass = () => {
     const handleExport = async () => {
         try {
             const state = store.getState();
-            const fleetData = state.fleet ?? state;
+            // POI store 結構：fleet data is at info.fleets (confirmed by poi-plugin-prophet)
+            const fleetData = state.info?.fleets ?? state;
 
-            if (!fleetData?.fleets || !fleetData.fleets.length) {
+            if (!fleetData || !Array.isArray(fleetData)) {
                 setStatus('沒有找到艦隊數據，請先編排艦隊');
                 return;
             }
 
-            // 轉換為 kc-web deck builder 格式 (第1艦隊)
-            const result = { version: 4, hqlv: fleetData.admiralLevel || 120 };
+            // 轉換為 kc-web deck builder 格式 (第1艦隊 = index 0)
+            const result = { version: 4, hqlv: state.info?.admiralLevel || 120 };
 
-            for (let i = 0; i < 8; i++) {
-                if (!fleetData.fleets?.[i]) continue;
-                const ships = fleetData.fleets[i].ships || [];
+            for (let i = 0; i < Math.min(8, fleetData.length); i++) {
+                if (!fleetData[i]) continue;
+                const ships = fleetData[i].api_ship || [];
+                const equipData = state.info?.equips?.[i] || [];
                 const fleetKey = `f${i + 1}`;
                 result[fleetKey] = {};
 
                 for (let j = 0; j < Math.min(6, ships.length); j++) {
-                    const ship = ships[j];
-                    if (!ship) continue;
+                    if (!ships[j]) continue;
                     const shipKey = `s${j + 1}`;
                     const entry = {
-                        i: ship.id || 0,
-                        lv: ship.level || 1,
-                        is: (ship.equipment || []).map(e => e ? (typeof e === 'object' ? (e.id ?? e.masterId) : e) : 0),
+                        i: ships[j], // ship ID
+                        lv: fleetData[i].api_lv || 1,
+                        is: [0, 0, 0, 0].map((_, idx) => equipData[idx] || 0), // equipment IDs
                     };
-                    if (ship.hp != null) entry.hp = typeof ship.hp === 'number' ? ship.hp : (ship.hp.current ?? ship.hp.max);
-                    if (ship.lu != null) entry.lu = ship.lu;
-                    if (ship.as != null) entry.as = ship.as;
-                    if (ship.aa != null) entry.aa = ship.aa;
-                    const extra = ship.extraEquipment ?? ship.ex;
-                    if (extra) {
-                        entry.ex = { i: typeof extra === 'object' ? (extra.id ?? extra.masterId) : extra };
+
+                    if (fleetData[i].api_now_hp != null) {
+                        entry.hp = fleetData[i].api_now_hp[j];
                     }
+                    if (fleetData[i].api_lv_msk != null) {
+                        entry.lu = fleetData[i].api_lv_msk;
+                    }
+
                     result[fleetKey][shipKey] = entry;
                 }
             }
